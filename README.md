@@ -11,8 +11,27 @@ python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\act
 pip install -r requirements.txt
 python -m jobradar fetch --all        # erster Lauf: alle Stellen der Quellen in sources.yaml
 python -m jobradar fetch              # spätere Läufe: nur neue Stellen seit dem letzten Lauf
-pytest                                # Tests mit Fixtures, ohne Netz
+pytest                                # Tests mit Fixtures, ohne Netz und ohne API-Schlüssel
 ```
+
+## Schritt 2: Anforderungen extrahieren (LLM)
+
+Braucht einen API-Schlüssel von Anthropic in der Umgebung, nie im Repo:
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...      # oder in ~/.bashrc eintragen
+python -m jobradar extract --limit 5     # erst mit wenigen Anzeigen testen
+python -m jobradar extract               # alle noch nicht extrahierten Anzeigen
+python -m jobradar extract --company staburo --force   # eine Firma neu verarbeiten
+```
+
+So funktioniert es: Der Stellentext geht zusammen mit einem Werkzeug `record_requirements`
+an das Modell. Das Eingabeschema des Werkzeugs ist das JSON-Schema des Pydantic-Modells
+`Requirements` (`jobradar/models.py`). Über `tool_choice` wird das Modell gezwungen, genau dieses
+Werkzeug aufzurufen, die Antwort ist also immer ein JSON-Objekt im festen Format, das Pydantic
+noch einmal prüft. Ergebnisse landen in `data/requirements.json`, schon extrahierte Anzeigen werden
+nicht noch einmal bezahlt. Standardmodell ist `claude-haiku-5-5` (günstig, für Extraktion
+ausreichend), änderbar über `JOBRADAR_MODEL` oder `--model`.
 
 Jeder Lauf speichert die Stellen unter `data/postings_<datum>.json`. Neue Firmen kommen in
 `sources.yaml`, das eigene Profil steht in `profile.yaml`.
@@ -21,7 +40,7 @@ Jeder Lauf speichert die Stellen unter `data/postings_<datum>.json`. Neue Firmen
 
 - [x] Schritt 1: Quellen Lever und Personio, Speichern, Abgleich neu/alt, Tabelle
 - [ ] Schritt 1b: SuccessFactors, Workday, Avature, Jobbörse
-- [ ] Schritt 2: Extraktion mit LLM (schema-constrained)
+- [x] Schritt 2: Extraktion mit LLM (schema-constrained über tool use)
 - [ ] Schritt 3: Bewertung gegen `profile.yaml`
 - [ ] Schritt 4: Evaluation gegen `data/labels.csv`
 - [ ] Schritt 5: Werkzeugaufrufe (Live-Check, Watchlist)
