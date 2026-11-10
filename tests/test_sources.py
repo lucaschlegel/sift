@@ -16,7 +16,7 @@ def test_lever_parse():
     ds = postings[0]
     assert ds.company == "QuantCo"
     assert ds.title == "Data Scientist"
-    assert ds.location == "Europe"
+    assert ds.location == "Europe (hybrid)"
     assert ds.url.endswith("3e18574e-ab5a-46a2-8714-a0221fb937e7")
     assert "causal inference" in ds.description_text
     assert "<li>" not in ds.description_text

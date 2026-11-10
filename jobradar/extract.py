@@ -19,17 +19,23 @@ import os
 from pathlib import Path
 from typing import Protocol
 
+from pydantic import BaseModel
+
 from jobradar.models import Posting, Requirements
 
 DEFAULT_MODEL = os.environ.get("JOBRADAR_MODEL", "claude-haiku-5-5")
 MAX_CHARS = 12000  # längere Anzeigen abschneiden, der Rest ist fast immer Firmenprosa
 
+PROMPT_VERSION = "v2"  # bei jeder Änderung am Prompt hochzählen, damit Schritt 4 Varianten vergleichen kann
+
 SYSTEM_PROMPT = """You extract structured hiring requirements from job postings.
 Rules:
+- Use only the requirements and responsibilities of the role. Ignore company descriptions, "about us" sections, founder biographies and benefits. A sentence like "founded by four PhDs" is NOT a requirement.
 - Use only what the posting says. Do not guess. If something is not stated, use null, an empty list or "unclear".
 - min_years_experience: only an explicitly stated minimum number of years of professional experience, else null.
-- seniority: junior = entry level / graduate / "(Junior)" / "(Senior)" in parentheses meaning either level; mid = 2-5 years or no explicit level but professional experience expected; senior = "Senior" or 5+ years; lead = Lead/Principal/Head/Director/Expert/Chief.
-- llm_experience_required: true only if hands-on experience with LLM / GenAI applications (building with LLM APIs, RAG, agents, prompt engineering) is listed as a requirement, not as a plus or nice-to-have.
+- seniority: junior = entry level, graduate, intern, working student, "(Junior)" in the title; a title like "(Senior) Data Scientist" with Senior in parentheses means the role is open to both levels, classify it as "mid", never as "senior"; mid = 2-5 years or no explicit level but some professional experience expected; senior = "Senior" without parentheses or 5+ years; lead = Lead/Principal/Head/Director/Expert/Chief.
+- phd_mentioned: true only if a doctorate is listed as required, preferred or welcome for the candidate.
+- llm_experience_required: true if hands-on experience with LLM / GenAI applications is a requirement of the role, including building with LLM or "frontier lab" APIs (OpenAI, Anthropic, Gemini), RAG, agents, prompt engineering, fine-tuning or serving language models (e.g. HuggingFace). False if it is only a plus or nice-to-have, or not mentioned.
 - must_haves: at most 8 short items, in the posting's own words, trimmed.
 - languages: list language requirements with level if given, e.g. "German C1", "English fluent".
 - remote_policy: one of onsite / hybrid / remote / unclear, optionally with a short detail, e.g. "hybrid, 2-3 days office".
@@ -103,17 +109,31 @@ def parse_tool_response(response) -> Requirements:
 REQ_FILE = Path("data") / "requirements.json"
 
 
-def load_requirements(path: Path = REQ_FILE) -> dict[str, Requirements]:
+class ExtractionRecord(BaseModel):
+    """Ein Extraktionsergebnis samt Herkunft, damit Schritt 4 Prompt- und Modellvarianten vergleichen kann."""
+
+    prompt_version: str
+    model: str
+    requirements: Requirements
+
+
+def load_requirements(path: Path = REQ_FILE) -> dict[str, ExtractionRecord]:
     if not path.exists():
         return {}
     raw = json.loads(path.read_text(encoding="utf-8"))
-    return {k: Requirements.model_validate(v) for k, v in raw.items()}
+    records = {}
+    for key, value in raw.items():
+        if "requirements" in value:  # neues Format
+            records[key] = ExtractionRecord.model_validate(value)
+        else:  # altes Format ohne Herkunft (Lauf vom 10.11.)
+            records[key] = ExtractionRecord(prompt_version="v1", model="claude-haiku-5-5", requirements=Requirements.model_validate(value))
+    return records
 
 
-def save_requirements(reqs: dict[str, Requirements], path: Path = REQ_FILE) -> None:
+def save_requirements(records: dict[str, ExtractionRecord], path: Path = REQ_FILE) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        json.dumps({k: v.model_dump(mode="json") for k, v in reqs.items()}, ensure_ascii=False, indent=2),
+        json.dumps({k: v.model_dump(mode="json") for k, v in records.items()}, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
 
@@ -121,19 +141,22 @@ def save_requirements(reqs: dict[str, Requirements], path: Path = REQ_FILE) -> N
 def extract_missing(
     postings: list[Posting],
     extractor: Extractor,
-    cache: dict[str, Requirements],
+    cache: dict[str, ExtractionRecord],
     *,
     limit: int | None = None,
     force: bool = False,
     log=print,
-) -> dict[str, Requirements]:
-    """Für alle Postings ohne Eintrag im Cache die Extraktion aufrufen."""
+) -> dict[str, ExtractionRecord]:
+    """Für alle Postings ohne Eintrag im Cache (oder mit veralteter Prompt-Version bei --force) extrahieren."""
     todo = [p for p in postings if force or p.key not in cache]
     if limit is not None:
         todo = todo[:limit]
+    model = getattr(extractor, "model", "unknown")
     for i, posting in enumerate(todo, start=1):
         try:
-            cache[posting.key] = extractor.extract(posting)
+            cache[posting.key] = ExtractionRecord(
+                prompt_version=PROMPT_VERSION, model=model, requirements=extractor.extract(posting)
+            )
             log(f"[ok] {i}/{len(todo)} {posting.company}: {posting.title}")
         except Exception as exc:  # eine Anzeige soll den Lauf nicht stoppen
             log(f"[warn] {i}/{len(todo)} {posting.company}: {posting.title}: {exc}")

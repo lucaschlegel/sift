@@ -96,7 +96,8 @@ def test_cache_roundtrip(tmp_path):
     path = tmp_path / "requirements.json"
     save_requirements(cache, path)
     loaded = load_requirements(path)
-    assert loaded[posting.key].role_family == "Data Scientist"
+    assert loaded[posting.key].requirements.role_family == "Data Scientist"
+    assert loaded[posting.key].prompt_version
     # zweiter Lauf: nichts mehr zu tun, der Fake wird nicht aufgerufen
     client = FakeClient()
     extract_missing([posting], AnthropicExtractor(model="x", client=client), loaded, log=lambda m: None)

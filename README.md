@@ -36,12 +36,28 @@ ausreichend), änderbar über `JOBRADAR_MODEL` oder `--model`.
 Jeder Lauf speichert die Stellen unter `data/postings_<datum>.json`. Neue Firmen kommen in
 `sources.yaml`, das eigene Profil steht in `profile.yaml`.
 
+## Schritt 3: Bewerten
+
+```bash
+python -m jobradar match          # Stellen, die die harten Filter bestehen, nach Score sortiert
+python -m jobradar match --all    # alle, mit Grund für das Ausscheiden
+```
+
+Harte Filter kommen aus `profile.yaml` (Praktikum, befristet, Level, Mindestjahre, LLM-Pflicht,
+Arbeitgebertyp, Ort). Der Score ist eine einfache Summe aus Fachrichtung, Promotion erwünscht,
+Ort und Einstiegsniveau. Alles regelbasiert und in `tests/test_match.py` geprüft, damit man
+später messen kann, ob ein Modell es besser macht.
+
+Die Extraktion speichert jetzt auch Prompt-Version und Modell zu jedem Ergebnis
+(`data/requirements.json`). Nach einer Prompt-Änderung `PROMPT_VERSION` in `jobradar/extract.py`
+hochzählen und mit `extract --force` neu laufen lassen, dann lassen sich Varianten vergleichen.
+
 ## Stand
 
 - [x] Schritt 1: Quellen Lever und Personio, Speichern, Abgleich neu/alt, Tabelle
 - [ ] Schritt 1b: SuccessFactors, Workday, Avature, Jobbörse
 - [x] Schritt 2: Extraktion mit LLM (schema-constrained über tool use)
-- [ ] Schritt 3: Bewertung gegen `profile.yaml`
+- [x] Schritt 3: Bewertung gegen `profile.yaml` (harte Filter plus Score, ohne Modell)
 - [ ] Schritt 4: Evaluation gegen `data/labels.csv`
 - [ ] Schritt 5: Werkzeugaufrufe (Live-Check, Watchlist)
 - [ ] Schritt 6: FastAPI, Docker

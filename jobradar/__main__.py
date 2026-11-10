@@ -2,6 +2,7 @@
 
   python -m jobradar fetch [--all]          Schritt 1: Stellen holen, speichern, neue zeigen
   python -m jobradar extract [--limit N]    Schritt 2: Anforderungen per Modell extrahieren
+  python -m jobradar match [--all]          Schritt 3: gegen profile.yaml bewerten
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ from pathlib import Path
 import yaml
 
 from jobradar.extract import AnthropicExtractor, extract_missing, load_requirements, save_requirements
+from jobradar.match import evaluate_all, load_profile
 from jobradar.sources import build_sources
 from jobradar.store import diff_new, load_previous, save_run
 
@@ -66,17 +68,19 @@ def print_requirements(postings, reqs) -> None:
         from rich.table import Table
     except ImportError:
         for p in postings:
-            r = reqs.get(p.key)
-            if r:
+            rec = reqs.get(p.key)
+            if rec:
+                r = rec.requirements
                 print(f"- {p.company} | {p.title} | {r.seniority} | years>={r.min_years_experience} | LLM={r.llm_experience_required} | {r.remote_policy}")
         return
     table = Table(title=f"Extrahierte Anforderungen ({sum(1 for p in postings if p.key in reqs)})")
     for col in ("Firma", "Titel", "Rolle", "Level", "Jahre", "LLM", "PhD", "Remote", "Sprachen"):
         table.add_column(col, overflow="fold")
     for p in sorted(postings, key=lambda x: (x.company, x.title)):
-        r = reqs.get(p.key)
-        if not r:
+        rec = reqs.get(p.key)
+        if not rec:
             continue
+        r = rec.requirements
         table.add_row(
             p.company, p.title, r.role_family, r.seniority,
             "" if r.min_years_experience is None else str(r.min_years_experience),
@@ -106,6 +110,33 @@ def cmd_extract(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_match(args: argparse.Namespace) -> int:
+    data_dir = Path(args.data_dir)
+    postings = load_previous(data_dir)
+    records = load_requirements(data_dir / "requirements.json")
+    reqs = {k: v.requirements for k, v in records.items()}
+    profile = load_profile(args.profile)
+    matches = evaluate_all(postings, reqs, profile)
+    by_key = {p.key: p for p in postings}
+    rows = [m for m in matches if args.all or m.hard_filter_passed]
+    try:
+        from rich.console import Console
+        from rich.table import Table
+    except ImportError:
+        for m in rows:
+            p = by_key[m.posting_key]
+            print(f"{m.score:.2f} {'ok ' if m.hard_filter_passed else 'raus'} {p.company} | {p.title} | {'; '.join(m.reasons)}")
+        return 0
+    table = Table(title=f"Bewertung ({len(rows)} von {len(matches)})")
+    for col in ("Score", "Filter", "Firma", "Titel", "Gründe", "URL"):
+        table.add_column(col, overflow="fold")
+    for m in rows:
+        p = by_key[m.posting_key]
+        table.add_row(f"{m.score:.2f}", "ok" if m.hard_filter_passed else "raus", p.company, p.title, "; ".join(m.reasons), p.url)
+    Console().print(table)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="jobradar")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -121,6 +152,11 @@ def main(argv: list[str] | None = None) -> int:
     extract.add_argument("--force", action="store_true", help="auch schon extrahierte Anzeigen neu verarbeiten")
     extract.add_argument("--model", default=None, help="Modellname, Standard aus JOBRADAR_MODEL oder claude-haiku-5-5")
     extract.set_defaults(func=cmd_extract)
+    match = sub.add_parser("match", help="Stellen gegen profile.yaml bewerten")
+    match.add_argument("--data-dir", default="data")
+    match.add_argument("--profile", default="profile.yaml")
+    match.add_argument("--all", action="store_true", help="auch Stellen zeigen, die am harten Filter scheitern")
+    match.set_defaults(func=cmd_match)
     args = parser.parse_args(argv)
     return args.func(args)
 

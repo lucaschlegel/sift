@@ -36,12 +36,16 @@ class LeverSource:
         locations = categories.get("allLocations") or (
             [categories["location"]] if categories.get("location") else []
         )
+        workplace = item.get("workplaceType")  # "hybrid", "remote", "on-site"
+        location = ", ".join(locations)
+        if workplace:
+            location = f"{location} ({workplace})" if location else workplace
         return Posting(
             source=self.name,
             company=self.company,
             external_id=item["id"],
             title=item.get("text", "").strip(),
-            location=", ".join(locations),
+            location=location,
             url=item.get("hostedUrl", ""),
             posted_at=posted,
             employment_type=categories.get("commitment", ""),

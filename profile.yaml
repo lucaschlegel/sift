@@ -2,15 +2,16 @@
 hard:
   contract: permanent          # unbefristet
   hours: full_time
-  locations_ok: ["München", "Munich", "Garching", "Martinsried", "Planegg", "remote Germany", "Stuttgart (3 office days)"]
+  locations_ok: ["München", "Munich", "Garching", "Martinsried", "Planegg", "Unterföhring", "Freising", "Germany", "Deutschland", "Stuttgart"]
+  locations_bad: ["USA", "United States", "Budapest", "Sofia", "Wien", "Vienna", "Oxford", "Sevilla", "Melbourne", "Heilbronn", "Karlsruhe", "Bloemfontein", "Berlin", "Hamburg", "Frankfurt"]
   exclude_employer_types: ["university", "research institute", "Max Planck", "Helmholtz", "Fraunhofer"]
   seniority_ok: ["junior", "mid", "unclear"]
   llm_experience_required: false   # Stellen mit LLM-Pflicht raus
   max_years_experience: 3
 soft:
-  prefer_domains: ["bio", "pharma", "medical", "clinical", "statistics", "consulting", "trainee"]
+  prefer_domains: ["bio", "pharma", "medical", "clinical", "statistic", "data scien", "consult", "trainee", "quantitative", "modell"]
   prefer_phd_welcome: true
-  avoid: ["pure software engineering", "frontend", "sales"]
+  avoid: ["frontend", "sales", "office management", "legal", "recruiting", "video", "UX", "cloud engineer", "software engineer"]
 background:
   degree: "M.Sc. Mathematics (TUM), PhD computational genomics (TUM, defence Q1 2027)"
   skills: ["Python", "TensorFlow/Keras", "scikit-learn", "R", "statistics", "mathematical modelling", "Linux/HPC", "Git"]
