@@ -1,80 +1,47 @@
 # jobradar
 
-Ein kleines Werkzeug, das Karriereseiten beobachtet, neue Stellen erkennt und sie
-(ab Schritt 2) mit einem Sprachmodell in ein festes Schema zieht und gegen ein Profil bewertet.
-Plan und Bausteine stehen in `PLAN.md`.
+A small tool that watches company career pages, extracts the requirements of each posting with an LLM into a fixed schema, and scores postings against a personal profile. Built as a portfolio project to practise LLM application work: API calls, schema-constrained outputs, caching, rule-based matching and a labelled evaluation set.
 
-## Schnellstart
+*Deutsche Kurzfassung unten.*
+
+## What it does
+
+1. **Fetch** postings from public career feeds (Lever, Personio) and store each run as JSON. New postings since the last run are listed.
+2. **Extract** structured requirements per posting with Claude (`claude-haiku-5-5`): role, seniority, minimum years, PhD mentioned, LLM experience required, languages, remote policy, contract type. The model is forced to call a tool whose input schema is the JSON schema of a Pydantic model, so the output is always valid structured data. Results are cached with prompt version and model.
+3. **Match** postings against `profile.yaml`: hard filters (internship, fixed-term, seniority, years, LLM requirement, location) and a simple score.
+4. **Evaluate** extraction and matching against `data/labels.csv`, a hand-labelled set of postings.
+
+## Results (prompt v2, 15 labelled postings)
+
+| Field | Accuracy |
+| --- | --- |
+| minimum years of experience | 100 % (14/14) |
+| LLM experience required | 100 % (10/10) |
+| PhD mentioned | 100 % (10/10) |
+| seniority | 69 % (9/13) |
+
+Postings I judged as a fit pass the hard filter 2/2; postings I judged as no fit fail it 10/13.
+Prompt v1 misread "(Senior)" in a title as senior, took "founded by four PhDs" for a PhD requirement and missed LLM requirements phrased as "frontier lab APIs"; v2 fixes all three.
+
+## Quickstart
 
 ```bash
-python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python -m jobradar fetch --all        # erster Lauf: alle Stellen der Quellen in sources.yaml
-python -m jobradar fetch              # spätere Läufe: nur neue Stellen seit dem letzten Lauf
-pytest                                # Tests mit Fixtures, ohne Netz und ohne API-Schlüssel
+pytest                                  # fixtures only, no network, no API key
+python -m jobradar fetch --all          # first run: all postings from sources.yaml
+export ANTHROPIC_API_KEY=sk-ant-...
+python -m jobradar extract              # a few cents for ~40 postings
+python -m jobradar match
+python -m jobradar evaluate
 ```
 
-## Schritt 2: Anforderungen extrahieren (LLM)
+Roadmap: more sources (SuccessFactors, Workday, Greenhouse, Arbeitsagentur), tool calls (live check whether a posting is still open), a short LLM-written rationale per match, FastAPI endpoint and Dockerfile.
 
-Braucht einen API-Schlüssel von Anthropic in der Umgebung, nie im Repo:
+---
 
-```bash
-export ANTHROPIC_API_KEY=sk-ant-...      # oder in ~/.bashrc eintragen
-python -m jobradar extract --limit 5     # erst mit wenigen Anzeigen testen
-python -m jobradar extract               # alle noch nicht extrahierten Anzeigen
-python -m jobradar extract --company staburo --force   # eine Firma neu verarbeiten
-```
+## Kurzfassung
 
-So funktioniert es: Der Stellentext geht zusammen mit einem Werkzeug `record_requirements`
-an das Modell. Das Eingabeschema des Werkzeugs ist das JSON-Schema des Pydantic-Modells
-`Requirements` (`jobradar/models.py`). Über `tool_choice` wird das Modell gezwungen, genau dieses
-Werkzeug aufzurufen, die Antwort ist also immer ein JSON-Objekt im festen Format, das Pydantic
-noch einmal prüft. Ergebnisse landen in `data/requirements.json`, schon extrahierte Anzeigen werden
-nicht noch einmal bezahlt. Standardmodell ist `claude-haiku-5-5` (günstig, für Extraktion
-ausreichend), änderbar über `JOBRADAR_MODEL` oder `--model`.
+Ein kleines Werkzeug, das Karriereseiten beobachtet, die Anforderungen jeder Stelle mit einem Sprachmodell in ein festes Schema zieht und gegen ein eigenes Profil bewertet. Entstanden als Portfolio-Projekt, um Anwendungsentwicklung mit LLMs zu üben: API-Aufrufe, strukturierte Ausgaben über erzwungene Werkzeugaufrufe, Caching, regelbasierte Bewertung und eine Messung gegen von Hand gesetzte Labels.
 
-Jeder Lauf speichert die Stellen unter `data/postings_<datum>.json`. Neue Firmen kommen in
-`sources.yaml`, das eigene Profil steht in `profile.yaml`.
-
-## Schritt 3: Bewerten
-
-```bash
-python -m jobradar match          # Stellen, die die harten Filter bestehen, nach Score sortiert
-python -m jobradar match --all    # alle, mit Grund für das Ausscheiden
-```
-
-Harte Filter kommen aus `profile.yaml` (Praktikum, befristet, Level, Mindestjahre, LLM-Pflicht,
-Arbeitgebertyp, Ort). Der Score ist eine einfache Summe aus Fachrichtung, Promotion erwünscht,
-Ort und Einstiegsniveau. Alles regelbasiert und in `tests/test_match.py` geprüft, damit man
-später messen kann, ob ein Modell es besser macht.
-
-Die Extraktion speichert jetzt auch Prompt-Version und Modell zu jedem Ergebnis
-(`data/requirements.json`). Nach einer Prompt-Änderung `PROMPT_VERSION` in `jobradar/extract.py`
-hochzählen und mit `extract --force` neu laufen lassen, dann lassen sich Varianten vergleichen.
-
-## Schritt 4: Messen
-
-`data/labels.csv` enthält von Hand gesetzte Wahrheiten für einzelne Anzeigen (Level, Mindestjahre,
-LLM-Pflicht, Promotion erwähnt, eigenes Urteil `fit`). Leere Zellen werden nicht gewertet.
-
-```bash
-python -m jobradar evaluate                                   # aktuelle Ergebnisse gegen die Labels
-cp data/requirements.json data/requirements_v1.json           # vor einem neuen Prompt sichern
-python -m jobradar extract --force                            # neuer Prompt (PROMPT_VERSION hochzählen)
-python -m jobradar evaluate --requirements data/requirements_v1.json
-python -m jobradar evaluate                                   # und vergleichen
-```
-
-Ausgabe: Trefferquote pro Feld mit Liste der Fehlgriffe, dazu wie viele `fit=yes`-Stellen den
-harten Filter bestehen und wie viele `fit=no` durchfallen. Labels ergänzen = eine Zeile in der CSV,
-der `posting_key` steht in `data/postings_*.json`.
-
-## Stand
-
-- [x] Schritt 1: Quellen Lever und Personio, Speichern, Abgleich neu/alt, Tabelle
-- [ ] Schritt 1b: SuccessFactors, Workday, Avature, Jobbörse
-- [x] Schritt 2: Extraktion mit LLM (schema-constrained über tool use)
-- [x] Schritt 3: Bewertung gegen `profile.yaml` (harte Filter plus Score, ohne Modell)
-- [x] Schritt 4: Evaluation gegen `data/labels.csv` (Trefferquote pro Feld, Filter gegen eigenes Urteil)
-- [ ] Schritt 5: Werkzeugaufrufe (Live-Check, Watchlist)
-- [ ] Schritt 6: FastAPI, Docker
+Befehle: `fetch` (Stellen holen, neue anzeigen), `extract` (Anforderungen per Claude extrahieren, Schema aus Pydantic), `match` (harte Filter und Score aus `profile.yaml`), `evaluate` (Trefferquote pro Feld gegen `data/labels.csv`). Stand Prompt v2: Jahre, LLM-Pflicht und Promotion je 100 Prozent, Level 69 Prozent auf 15 Labels. Plan für die nächsten Schritte in `PLAN.md`.
