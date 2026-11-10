@@ -15,7 +15,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 
-from jobradar.assess import load_assessments
+from jobradar.assess import VERDICT_ORDER, load_assessments
 from jobradar.extract import load_requirements
 from jobradar.match import evaluate_all, load_profile
 from jobradar.store import load_previous
@@ -69,5 +69,4 @@ def assessments() -> list[dict]:
         p = posts.get(key)
         out.append({"posting_key": key, "company": p.company if p else None, "title": p.title if p else None,
                     "url": p.url if p else None, **rec.model_dump(mode="json")})
-    order = {"apply": 0, "maybe": 1, "skip": 2}
-    return sorted(out, key=lambda r: (order[r["assessment"]["verdict"]], -r["assessment"]["fit_score"]))
+    return sorted(out, key=lambda r: (VERDICT_ORDER[r["assessment"]["verdict"]], -r["assessment"]["fit_score"]))

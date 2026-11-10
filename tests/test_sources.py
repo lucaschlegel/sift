@@ -23,6 +23,14 @@ def test_lever_parse():
     assert ds.key == "lever:quantco-:3e18574e-ab5a-46a2-8714-a0221fb937e7"
 
 
+def test_lever_location_hint_only_for_generic_locations():
+    items = json.loads((FIX / "lever_sample.json").read_text(encoding="utf-8"))
+    src = LeverSource("quantco-", "QuantCo", location_hint="office Munich")
+    assert src.parse(items[0]).location == "Europe (hybrid), office Munich"
+    usa = dict(items[0], categories={**items[0]["categories"], "location": "USA", "allLocations": ["USA"]})
+    assert src.parse(usa).location == "USA (hybrid)"
+
+
 def test_personio_parse():
     xml_text = (FIX / "personio_sample.xml").read_text(encoding="utf-8")
     postings = PersonioSource("staburo", "Staburo").parse(xml_text)

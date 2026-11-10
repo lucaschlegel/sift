@@ -8,8 +8,8 @@ lever:quantco-:a9862eb3-bbfa-4cdc-862d-ad614f20b1e4,junior,0,no,no,no,QuantCo Da
 personio:staburo:765770,mid,0,no,yes,yes,Staburo (Senior) Data Scientist Clinical Statistics. Beworben 06.11.
 personio:staburo:2276497,lead,5,no,no,no,Staburo Head of IT.
 personio:coriolis:2776949,lead,5,no,no,no,Coriolis IT Architecture Lead.
-personio:tngtech:81689,mid,0,no,yes,no,TNG Software Developer / Consultant Muenchen. Beworben 16.10. Absage. Promotion wird erwaehnt.
-personio:tngtech:2649297,mid,0,no,no,no,TNG Legal Professional.
+personio:tngtech:81689,unclear,0,no,yes,no,TNG Software Developer / Consultant Muenchen. Beworben 16.10. Absage. Studium oder Promotion ohne Levelangabe -> unclear (Label am 10.11. korrigiert, vorher mid).
+personio:tngtech:2649297,junior,0,no,no,no,TNG Legal Professional. Erste Erfahrung z.B. durch Praktika reicht -> junior (Label am 10.11. korrigiert, vorher mid).
 personio:appliedai:2846435,junior,0,,no,no,appliedAI AI Associate. Jetzt Heilbronn.
 personio:appliedai:2807097,lead,10,,,no,appliedAI Principal AI Engineer.
 personio:appliedai:2805112,senior,8,,,no,appliedAI Senior Software Engineer.

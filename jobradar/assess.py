@@ -24,8 +24,8 @@ MAX_TOOL_ROUNDS = 6
 
 
 class Assessment(BaseModel):
-    verdict: Literal["apply", "maybe", "skip"]
-    fit_score: float = Field(ge=0, le=1, description="0 = passt gar nicht, 1 = passt sehr gut")
+    verdict: Literal["apply", "maybe", "skip", "applied"]
+    fit_score: float = Field(ge=0, le=1, description="0 = passt gar nicht, 1 = passt sehr gut (content fit, independent of the verdict)")
     rationale: str = Field(description="Two or three plain sentences, no marketing language")
     main_gap: str = Field(default="", description="The single biggest gap between profile and posting, or empty")
     still_live: bool | None = Field(default=None, description="Result of check_posting_live if used")
@@ -38,13 +38,20 @@ class AssessmentRecord(BaseModel):
     assessment: Assessment
 
 
-PROMPT_VERSION = "a1"
+PROMPT_VERSION = "a2"
+
+# Reihenfolge für Tabellen und API: erst, was zu tun ist.
+VERDICT_ORDER = {"apply": 0, "maybe": 1, "applied": 2, "skip": 3}
 
 SYSTEM_PROMPT = """You are helping one specific candidate decide whether to apply to a job posting.
 You get the candidate profile, the posting, the requirements extracted earlier and the result of simple rule-based filters.
 You may call tools: check_posting_live to see whether the posting is still online, lookup_watchlist to read the candidate's own notes about the company (previous applications, rejections, impressions). Use lookup_watchlist for every posting; use check_posting_live when the posting is older than a few months or the rules say it fits.
 Judge the actual work: a "Software Developer / Consultant" role is software engineering even if it says consultant; the candidate wants data analysis, statistics, modelling or quantitative consulting, not pure software engineering.
-Be blunt and concrete. Then call record_assessment exactly once with your final judgement. verdict: apply = worth an application now; maybe = borderline, mention what would need to be true; skip = do not apply."""
+Posting dates from the feed are often the date the ad was first created and can be years old for evergreen postings; do not treat an old date as a reason against applying if the posting is live.
+An earlier application to the same company for a different role is not a reason against applying to this one. Only an application to this same role counts as a duplicate.
+Be blunt and concrete. Then call record_assessment exactly once with your final judgement.
+verdict: apply = worth an application now; maybe = borderline, say what would need to be true; skip = do not apply; applied = the watchlist shows the candidate already applied to this same role, so follow up instead of applying again.
+fit_score always rates the content fit between profile and role, independent of the verdict (an "applied" posting with a good fit keeps a high score)."""
 
 RECORD_TOOL = {
     "name": "record_assessment",

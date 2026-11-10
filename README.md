@@ -10,20 +10,23 @@ A small tool that watches company career pages, extracts the requirements of eac
 2. **Extract** structured requirements per posting with Claude (`claude-haiku-5-5`): role, seniority, minimum years, PhD mentioned, LLM experience required, languages, remote policy, contract type. The model is forced to call a tool whose input schema is the JSON schema of a Pydantic model, so the output is always valid structured data. Results are cached with prompt version and model.
 3. **Match** postings against `profile.yaml`: hard filters (internship, fixed-term, seniority, years, LLM requirement, location) and a simple score.
 4. **Evaluate** extraction and matching against `data/labels.csv`, a hand-labelled set of postings.
-5. **Assess** the postings that pass the filter: the model gets profile, posting, extracted requirements and the rule result, may call tools (`check_posting_live`, `lookup_watchlist` over my own notes in `watchlist.yaml`) in a plain tool-use loop, and must finish with a structured verdict (apply / maybe / skip, score, rationale, main gap).
+5. **Assess** the postings that pass the filter: the model gets profile, posting, extracted requirements and the rule result, may call tools (`check_posting_live`, `lookup_watchlist` over my own notes in `watchlist.yaml`) in a plain tool-use loop, and must finish with a structured verdict (apply / maybe / skip / applied, content fit score, rationale, main gap).
 6. **Serve** the results read-only with FastAPI (`/postings`, `/matches`, `/assessments`); `run` chains fetch, extract and assess for a cron job; Dockerfile included.
 
-## Results (prompt v2, 15 labelled postings)
+## Results (15 labelled postings, `claude-haiku-5-5`)
 
-| Field | Accuracy |
-| --- | --- |
-| minimum years of experience | 100 % (14/14) |
-| LLM experience required | 100 % (10/10) |
-| PhD mentioned | 100 % (10/10) |
-| seniority | 69 % (9/13) |
+| Field | prompt v2 | prompt v3 |
+| --- | --- | --- |
+| minimum years of experience | 100 % (14/14) | 100 % (14/14) |
+| LLM experience required | 100 % (10/10) | 100 % (10/10) |
+| PhD mentioned | 100 % (10/10) | 100 % (10/10) |
+| seniority | 69 % (9/13) | 85 % (11/13) |
 
 Postings I judged as a fit pass the hard filter 2/2; postings I judged as no fit fail it 10/13.
-Prompt v1 misread "(Senior)" in a title as senior, took "founded by four PhDs" for a PhD requirement and missed LLM requirements phrased as "frontier lab APIs"; v2 fixes all three.
+Prompt v1 misread "(Senior)" in a title as senior, took "founded by four PhDs" for a PhD requirement and missed LLM requirements phrased as "frontier lab APIs"; v2 fixed all three but lost two seniority calls ("Data Scientist" open to graduates became unclear, "Senior Software Engineer" became mid). v3 orders the seniority rules explicitly (title word first, then text, else unclear) and gets both back.
+The two remaining v3 "errors" turned out to be label errors: re-reading the postings, "first legal experience, e.g. internships" is junior, and "degree or PhD" with no level statement is unclear. With the corrected labels v3 is 13/13 on seniority and v2 11/13. Lesson: check the labels before the prompt.
+
+The assessment step on the 9 postings that pass the filter: 2 maybe, 7 skip, 0 apply, which is right, since I had already applied to the two best fits (QuantCo Data Scientist, Staburo). That is why the verdict `applied` exists now, with the content fit kept in `fit_score`.
 
 ## Quickstart
 
@@ -41,7 +44,7 @@ python -m jobradar serve                # http://127.0.0.1:8000/docs
 python -m jobradar run                  # fetch + extract + assess, for cron
 ```
 
-Roadmap: more sources (SuccessFactors, Workday, Greenhouse, Arbeitsagentur), more labels, prompt v3 vs v2 comparison in this table.
+Roadmap: more sources (SuccessFactors, Workday, Greenhouse, Arbeitsagentur), more labels (target 30), a second model in the results table, cron on a small VM.
 
 ---
 
@@ -49,4 +52,4 @@ Roadmap: more sources (SuccessFactors, Workday, Greenhouse, Arbeitsagentur), mor
 
 Ein kleines Werkzeug, das Karriereseiten beobachtet, die Anforderungen jeder Stelle mit einem Sprachmodell in ein festes Schema zieht und gegen ein eigenes Profil bewertet. Entstanden als Portfolio-Projekt, um Anwendungsentwicklung mit LLMs zu üben: API-Aufrufe, strukturierte Ausgaben über erzwungene Werkzeugaufrufe, Caching, regelbasierte Bewertung und eine Messung gegen von Hand gesetzte Labels.
 
-Befehle: `fetch` (Stellen holen, neue anzeigen), `extract` (Anforderungen per Claude extrahieren, Schema aus Pydantic), `match` (harte Filter und Score aus `profile.yaml`), `evaluate` (Trefferquote pro Feld gegen `data/labels.csv`), `assess` (Modell begründet die Passung, darf Werkzeuge aufrufen), `serve` (FastAPI, nur lesend), `run` (alles für den Cronjob). Stand Prompt v2: Jahre, LLM-Pflicht und Promotion je 100 Prozent, Level 69 Prozent auf 15 Labels. Plan für die nächsten Schritte in `PLAN.md`.
+Befehle: `fetch` (Stellen holen, neue anzeigen), `extract` (Anforderungen per Claude extrahieren, Schema aus Pydantic), `match` (harte Filter und Score aus `profile.yaml`), `evaluate` (Trefferquote pro Feld gegen `data/labels.csv`), `assess` (Modell begründet die Passung, darf Werkzeuge aufrufen), `serve` (FastAPI, nur lesend), `run` (alles für den Cronjob). Stand Prompt v3: Jahre, LLM-Pflicht und Promotion je 100 Prozent, Level 85 Prozent auf 15 Labels (100 Prozent nach Korrektur zweier falscher Labels). Plan für die nächsten Schritte in `PLAN.md`.

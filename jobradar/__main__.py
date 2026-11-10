@@ -18,7 +18,7 @@ from pathlib import Path
 import yaml
 
 from jobradar.extract import AnthropicExtractor, extract_missing, load_requirements, save_requirements
-from jobradar.assess import AnthropicAssessor, load_assessments, save_assessments
+from jobradar.assess import VERDICT_ORDER, AnthropicAssessor, load_assessments, save_assessments
 from jobradar.evaluate import format_report, load_labels, run as run_evaluation
 from jobradar.match import evaluate_all, load_profile
 from jobradar.sources import build_sources
@@ -195,9 +195,8 @@ def cmd_assess(args: argparse.Namespace) -> int:
     table = Table(title=f"Einschätzung ({len(candidates)})")
     for col in ("Urteil", "Fit", "Firma", "Titel", "Begründung", "Lücke", "Online", "Werkzeuge"):
         table.add_column(col, overflow="fold")
-    order = {"apply": 0, "maybe": 1, "skip": 2}
     rows = [(m, cache[m.posting_key]) for m in candidates if m.posting_key in cache]
-    rows.sort(key=lambda t: (order[t[1].assessment.verdict], -t[1].assessment.fit_score))
+    rows.sort(key=lambda t: (VERDICT_ORDER[t[1].assessment.verdict], -t[1].assessment.fit_score))
     for m, rec in rows:
         p = by_key[m.posting_key]
         a = rec.assessment

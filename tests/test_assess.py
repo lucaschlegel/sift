@@ -66,7 +66,7 @@ def test_tool_loop_runs_tools_and_returns_assessment():
 
 def test_record_tool_schema_has_verdict_enum():
     props = RECORD_TOOL["input_schema"]["properties"]
-    assert set(props["verdict"]["enum"]) == {"apply", "maybe", "skip"}
+    assert set(props["verdict"]["enum"]) == {"apply", "maybe", "skip", "applied"}
 
 
 def test_user_message_contains_everything():

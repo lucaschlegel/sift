@@ -13,6 +13,11 @@ from jobradar.models import Posting
 from jobradar.sources.base import get, strip_html
 
 
+# Ortsangaben, die keinen Ort nennen. Nur dann wird location_hint angehängt;
+# bei "USA" oder "Berlin" wäre der Hinweis "office Munich" irreführend.
+GENERIC_LOCATIONS = {"", "europe", "emea", "remote", "worldwide", "global", "anywhere"}
+
+
 class LeverSource:
     def __init__(self, slug: str, company: str | None = None, location_hint: str | None = None):
         self.slug = slug
@@ -41,7 +46,8 @@ class LeverSource:
         location = ", ".join(locations)
         if workplace:
             location = f"{location} ({workplace})" if location else workplace
-        if self.location_hint:
+        generic = all(loc.strip().lower() in GENERIC_LOCATIONS for loc in locations)
+        if self.location_hint and generic:
             location = f"{location}, {self.location_hint}" if location else self.location_hint
         return Posting(
             source=self.name,
