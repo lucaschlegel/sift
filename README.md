@@ -10,6 +10,8 @@ A small tool that watches company career pages, extracts the requirements of eac
 2. **Extract** structured requirements per posting with Claude (`claude-haiku-5-5`): role, seniority, minimum years, PhD mentioned, LLM experience required, languages, remote policy, contract type. The model is forced to call a tool whose input schema is the JSON schema of a Pydantic model, so the output is always valid structured data. Results are cached with prompt version and model.
 3. **Match** postings against `profile.yaml`: hard filters (internship, fixed-term, seniority, years, LLM requirement, location) and a simple score.
 4. **Evaluate** extraction and matching against `data/labels.csv`, a hand-labelled set of postings.
+5. **Assess** the postings that pass the filter: the model gets profile, posting, extracted requirements and the rule result, may call tools (`check_posting_live`, `lookup_watchlist` over my own notes in `watchlist.yaml`) in a plain tool-use loop, and must finish with a structured verdict (apply / maybe / skip, score, rationale, main gap).
+6. **Serve** the results read-only with FastAPI (`/postings`, `/matches`, `/assessments`); `run` chains fetch, extract and assess for a cron job; Dockerfile included.
 
 ## Results (prompt v2, 15 labelled postings)
 
@@ -34,9 +36,12 @@ export ANTHROPIC_API_KEY=sk-ant-...
 python -m jobradar extract              # a few cents for ~40 postings
 python -m jobradar match
 python -m jobradar evaluate
+python -m jobradar assess --top 5       # tool-use loop, a few cents
+python -m jobradar serve                # http://127.0.0.1:8000/docs
+python -m jobradar run                  # fetch + extract + assess, for cron
 ```
 
-Roadmap: more sources (SuccessFactors, Workday, Greenhouse, Arbeitsagentur), tool calls (live check whether a posting is still open), a short LLM-written rationale per match, FastAPI endpoint and Dockerfile.
+Roadmap: more sources (SuccessFactors, Workday, Greenhouse, Arbeitsagentur), more labels, prompt v3 vs v2 comparison in this table.
 
 ---
 
@@ -44,4 +49,4 @@ Roadmap: more sources (SuccessFactors, Workday, Greenhouse, Arbeitsagentur), too
 
 Ein kleines Werkzeug, das Karriereseiten beobachtet, die Anforderungen jeder Stelle mit einem Sprachmodell in ein festes Schema zieht und gegen ein eigenes Profil bewertet. Entstanden als Portfolio-Projekt, um Anwendungsentwicklung mit LLMs zu üben: API-Aufrufe, strukturierte Ausgaben über erzwungene Werkzeugaufrufe, Caching, regelbasierte Bewertung und eine Messung gegen von Hand gesetzte Labels.
 
-Befehle: `fetch` (Stellen holen, neue anzeigen), `extract` (Anforderungen per Claude extrahieren, Schema aus Pydantic), `match` (harte Filter und Score aus `profile.yaml`), `evaluate` (Trefferquote pro Feld gegen `data/labels.csv`). Stand Prompt v2: Jahre, LLM-Pflicht und Promotion je 100 Prozent, Level 69 Prozent auf 15 Labels. Plan für die nächsten Schritte in `PLAN.md`.
+Befehle: `fetch` (Stellen holen, neue anzeigen), `extract` (Anforderungen per Claude extrahieren, Schema aus Pydantic), `match` (harte Filter und Score aus `profile.yaml`), `evaluate` (Trefferquote pro Feld gegen `data/labels.csv`), `assess` (Modell begründet die Passung, darf Werkzeuge aufrufen), `serve` (FastAPI, nur lesend), `run` (alles für den Cronjob). Stand Prompt v2: Jahre, LLM-Pflicht und Promotion je 100 Prozent, Level 69 Prozent auf 15 Labels. Plan für die nächsten Schritte in `PLAN.md`.

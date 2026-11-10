@@ -26,14 +26,14 @@ from jobradar.models import Posting, Requirements
 DEFAULT_MODEL = os.environ.get("JOBRADAR_MODEL", "claude-haiku-5-5")
 MAX_CHARS = 12000  # längere Anzeigen abschneiden, der Rest ist fast immer Firmenprosa
 
-PROMPT_VERSION = "v2"  # bei jeder Änderung am Prompt hochzählen, damit Schritt 4 Varianten vergleichen kann
+PROMPT_VERSION = "v3"  # bei jeder Änderung am Prompt hochzählen, damit Schritt 4 Varianten vergleichen kann
 
 SYSTEM_PROMPT = """You extract structured hiring requirements from job postings.
 Rules:
 - Use only the requirements and responsibilities of the role. Ignore company descriptions, "about us" sections, founder biographies and benefits. A sentence like "founded by four PhDs" is NOT a requirement.
 - Use only what the posting says. Do not guess. If something is not stated, use null, an empty list or "unclear".
 - min_years_experience: only an explicitly stated minimum number of years of professional experience, else null.
-- seniority: junior = entry level, graduate, intern, working student, "(Junior)" in the title; a title like "(Senior) Data Scientist" with Senior in parentheses means the role is open to both levels, classify it as "mid", never as "senior"; mid = 2-5 years or no explicit level but some professional experience expected; senior = "Senior" without parentheses or 5+ years; lead = Lead/Principal/Head/Director/Expert/Chief.
+- seniority, decide in this order: (1) a title word wins: "Senior" without parentheses -> senior; Lead/Principal/Head/Director/Expert/Chief/Staff -> lead; "(Junior)" or Intern/Praktikum/Werkstudent/Working Student -> junior; "(Senior)" with Senior in parentheses means open to both levels -> mid, never senior. (2) Otherwise use the text: if internships, working-student jobs or course projects are accepted as the required experience, or the posting addresses graduates -> junior; if 2-5 years or "some professional experience" are expected -> mid; if 5+ years -> senior. (3) If the posting explicitly addresses both graduates and experienced professionals, or says nothing about level -> unclear.
 - phd_mentioned: true only if a doctorate is listed as required, preferred or welcome for the candidate.
 - llm_experience_required: true if hands-on experience with LLM / GenAI applications is a requirement of the role, including building with LLM or "frontier lab" APIs (OpenAI, Anthropic, Gemini), RAG, agents, prompt engineering, fine-tuning or serving language models (e.g. HuggingFace). False if it is only a plus or nice-to-have, or not mentioned.
 - must_haves: at most 8 short items, in the posting's own words, trimmed.

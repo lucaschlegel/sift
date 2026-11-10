@@ -4,6 +4,9 @@
   python -m jobradar extract [--limit N]    Schritt 2: Anforderungen per Modell extrahieren
   python -m jobradar match [--all]          Schritt 3: gegen profile.yaml bewerten
   python -m jobradar evaluate               Schritt 4: gegen data/labels.csv messen
+  python -m jobradar assess [--top N]       Schritt 5: Modell begründet die Passung, mit Werkzeugen
+  python -m jobradar run                    alles hintereinander (für den Cronjob)
+  python -m jobradar serve                  Schritt 6: FastAPI unter http://127.0.0.1:8000
 """
 
 from __future__ import annotations
@@ -15,6 +18,7 @@ from pathlib import Path
 import yaml
 
 from jobradar.extract import AnthropicExtractor, extract_missing, load_requirements, save_requirements
+from jobradar.assess import AnthropicAssessor, load_assessments, save_assessments
 from jobradar.evaluate import format_report, load_labels, run as run_evaluation
 from jobradar.match import evaluate_all, load_profile
 from jobradar.sources import build_sources
@@ -154,6 +158,71 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_assess(args: argparse.Namespace) -> int:
+    data_dir = Path(args.data_dir)
+    postings = load_previous(data_dir)
+    records = load_requirements(data_dir / "requirements.json")
+    reqs = {k: v.requirements for k, v in records.items()}
+    profile = load_profile(args.profile)
+    matches = evaluate_all(postings, reqs, profile)
+    by_key = {p.key: p for p in postings}
+    candidates = [m for m in matches if m.hard_filter_passed or args.all]
+    if args.top:
+        candidates = candidates[: args.top]
+    cache = load_assessments(data_dir / "assessments.json")
+    assessor = AnthropicAssessor(model=args.model)
+    for i, m in enumerate(candidates, start=1):
+        if m.posting_key in cache and not args.force:
+            continue
+        p = by_key[m.posting_key]
+        try:
+            cache[m.posting_key] = assessor.assess(p, reqs[m.posting_key], m, profile)
+            a = cache[m.posting_key].assessment
+            print(f"[ok] {i}/{len(candidates)} {p.company}: {p.title} -> {a.verdict} ({a.fit_score:.2f})", file=sys.stderr)
+        except Exception as exc:
+            print(f"[warn] {i}/{len(candidates)} {p.company}: {p.title}: {exc}", file=sys.stderr)
+    save_assessments(cache, data_dir / "assessments.json")
+    try:
+        from rich.console import Console
+        from rich.table import Table
+    except ImportError:
+        for m in candidates:
+            rec = cache.get(m.posting_key)
+            if rec:
+                p = by_key[m.posting_key]
+                print(f"{rec.assessment.verdict:5} {rec.assessment.fit_score:.2f} {p.company} | {p.title} | {rec.assessment.rationale}")
+        return 0
+    table = Table(title=f"Einschätzung ({len(candidates)})")
+    for col in ("Urteil", "Fit", "Firma", "Titel", "Begründung", "Lücke", "Online", "Werkzeuge"):
+        table.add_column(col, overflow="fold")
+    order = {"apply": 0, "maybe": 1, "skip": 2}
+    rows = [(m, cache[m.posting_key]) for m in candidates if m.posting_key in cache]
+    rows.sort(key=lambda t: (order[t[1].assessment.verdict], -t[1].assessment.fit_score))
+    for m, rec in rows:
+        p = by_key[m.posting_key]
+        a = rec.assessment
+        live = "" if a.still_live is None else ("ja" if a.still_live else "nein")
+        table.add_row(a.verdict, f"{a.fit_score:.2f}", p.company, p.title, a.rationale, a.main_gap, live, str(len(rec.tool_calls)))
+    Console().print(table)
+    return 0
+
+
+def cmd_run(args: argparse.Namespace) -> int:
+    """fetch -> extract -> match -> assess, für den Cronjob."""
+    rc = cmd_fetch(argparse.Namespace(sources=args.sources, data_dir=args.data_dir, all=False))
+    if rc:
+        return rc
+    cmd_extract(argparse.Namespace(data_dir=args.data_dir, company=None, limit=None, force=False, model=args.model))
+    return cmd_assess(argparse.Namespace(data_dir=args.data_dir, profile=args.profile, top=args.top, all=False, force=False, model=args.model))
+
+
+def cmd_serve(args: argparse.Namespace) -> int:
+    import uvicorn
+
+    uvicorn.run("jobradar.api:app", host=args.host, port=args.port, reload=False)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="jobradar")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -180,6 +249,25 @@ def main(argv: list[str] | None = None) -> int:
     ev.add_argument("--requirements", default=None, help="andere Ergebnisdatei, z. B. data/requirements_v1.json")
     ev.add_argument("--profile", default="profile.yaml")
     ev.set_defaults(func=cmd_evaluate)
+    assess = sub.add_parser("assess", help="Modell begründet die Passung der gefilterten Stellen (mit Werkzeugen)")
+    assess.add_argument("--data-dir", default="data")
+    assess.add_argument("--profile", default="profile.yaml")
+    assess.add_argument("--top", type=int, default=None, help="nur die N besten nach Regel-Score")
+    assess.add_argument("--all", action="store_true", help="auch Stellen, die am harten Filter scheitern")
+    assess.add_argument("--force", action="store_true")
+    assess.add_argument("--model", default=None)
+    assess.set_defaults(func=cmd_assess)
+    runp = sub.add_parser("run", help="fetch, extract, match, assess hintereinander")
+    runp.add_argument("--sources", default="sources.yaml")
+    runp.add_argument("--data-dir", default="data")
+    runp.add_argument("--profile", default="profile.yaml")
+    runp.add_argument("--top", type=int, default=10)
+    runp.add_argument("--model", default=None)
+    runp.set_defaults(func=cmd_run)
+    serve = sub.add_parser("serve", help="FastAPI starten")
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8000)
+    serve.set_defaults(func=cmd_serve)
     args = parser.parse_args(argv)
     return args.func(args)
 
