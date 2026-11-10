@@ -52,12 +52,29 @@ Die Extraktion speichert jetzt auch Prompt-Version und Modell zu jedem Ergebnis
 (`data/requirements.json`). Nach einer Prompt-Änderung `PROMPT_VERSION` in `jobradar/extract.py`
 hochzählen und mit `extract --force` neu laufen lassen, dann lassen sich Varianten vergleichen.
 
+## Schritt 4: Messen
+
+`data/labels.csv` enthält von Hand gesetzte Wahrheiten für einzelne Anzeigen (Level, Mindestjahre,
+LLM-Pflicht, Promotion erwähnt, eigenes Urteil `fit`). Leere Zellen werden nicht gewertet.
+
+```bash
+python -m jobradar evaluate                                   # aktuelle Ergebnisse gegen die Labels
+cp data/requirements.json data/requirements_v1.json           # vor einem neuen Prompt sichern
+python -m jobradar extract --force                            # neuer Prompt (PROMPT_VERSION hochzählen)
+python -m jobradar evaluate --requirements data/requirements_v1.json
+python -m jobradar evaluate                                   # und vergleichen
+```
+
+Ausgabe: Trefferquote pro Feld mit Liste der Fehlgriffe, dazu wie viele `fit=yes`-Stellen den
+harten Filter bestehen und wie viele `fit=no` durchfallen. Labels ergänzen = eine Zeile in der CSV,
+der `posting_key` steht in `data/postings_*.json`.
+
 ## Stand
 
 - [x] Schritt 1: Quellen Lever und Personio, Speichern, Abgleich neu/alt, Tabelle
 - [ ] Schritt 1b: SuccessFactors, Workday, Avature, Jobbörse
 - [x] Schritt 2: Extraktion mit LLM (schema-constrained über tool use)
 - [x] Schritt 3: Bewertung gegen `profile.yaml` (harte Filter plus Score, ohne Modell)
-- [ ] Schritt 4: Evaluation gegen `data/labels.csv`
+- [x] Schritt 4: Evaluation gegen `data/labels.csv` (Trefferquote pro Feld, Filter gegen eigenes Urteil)
 - [ ] Schritt 5: Werkzeugaufrufe (Live-Check, Watchlist)
 - [ ] Schritt 6: FastAPI, Docker

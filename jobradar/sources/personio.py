@@ -15,8 +15,9 @@ from jobradar.sources.base import get, strip_html
 
 
 class PersonioSource:
-    def __init__(self, slug: str, company: str | None = None):
+    def __init__(self, slug: str, company: str | None = None, location_hint: str | None = None):
         self.slug = slug
+        self.location_hint = location_hint  # z. B. "office Munich", wenn die Quelle nur "Europe" sagt
         self.company = company or slug.capitalize()
         self.name = f"personio:{slug}"
 

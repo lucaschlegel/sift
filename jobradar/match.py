@@ -25,11 +25,19 @@ def load_profile(path: str | Path = "profile.yaml") -> dict:
 
 
 def _contains_any(text: str, needles: list[str]) -> str | None:
-    low = text.lower()
+    """Erster Treffer aus `needles` in `text`, an Wortgrenzen. ("UX" darf nicht in "Linux" treffen.)
+    Ein Needle, das mit einem Wortteil endet (z. B. "statistic", "consult"), trifft auch längere Wörter."""
     for n in needles:
-        if n.lower() in low:
+        pattern = r"(?<![A-Za-zÄÖÜäöüß])" + re.escape(n.lower()) + r"(?![A-Za-zÄÖÜäöüß])"
+        # Präfix-Needles: erlauben Wortfortsetzung, wenn das Needle kein ganzes Wort sein soll
+        if n.lower() in PREFIX_NEEDLES:
+            pattern = r"(?<![A-Za-zÄÖÜäöüß])" + re.escape(n.lower())
+        if re.search(pattern, text.lower()):
             return n
     return None
+
+
+PREFIX_NEEDLES = {"statistic", "consult", "modell", "data scien", "bio", "pharma", "clinic", "quantitative"}
 
 
 def location_status(posting: Posting, req: Requirements, profile: dict) -> str:

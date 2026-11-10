@@ -10,7 +10,7 @@ def build_sources(config: dict) -> list:
     """Aus dem Abschnitt `sources` der sources.yaml die Quellobjekte bauen."""
     sources = []
     for entry in config.get("lever", []):
-        sources.append(LeverSource(entry["slug"], entry.get("company")))
+        sources.append(LeverSource(entry["slug"], entry.get("company"), entry.get("location_hint")))
     for entry in config.get("personio", []):
-        sources.append(PersonioSource(entry["slug"], entry.get("company")))
+        sources.append(PersonioSource(entry["slug"], entry.get("company"), entry.get("location_hint")))
     return sources

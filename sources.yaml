@@ -4,6 +4,7 @@ sources:
   lever:
     - slug: quantco-
       company: QuantCo
+      location_hint: office Munich   # Lever sagt nur "Europe"
   personio:
     - slug: staburo
       company: Staburo

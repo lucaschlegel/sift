@@ -3,6 +3,7 @@
   python -m jobradar fetch [--all]          Schritt 1: Stellen holen, speichern, neue zeigen
   python -m jobradar extract [--limit N]    Schritt 2: Anforderungen per Modell extrahieren
   python -m jobradar match [--all]          Schritt 3: gegen profile.yaml bewerten
+  python -m jobradar evaluate               Schritt 4: gegen data/labels.csv messen
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ from pathlib import Path
 import yaml
 
 from jobradar.extract import AnthropicExtractor, extract_missing, load_requirements, save_requirements
+from jobradar.evaluate import format_report, load_labels, run as run_evaluation
 from jobradar.match import evaluate_all, load_profile
 from jobradar.sources import build_sources
 from jobradar.store import diff_new, load_previous, save_run
@@ -137,6 +139,21 @@ def cmd_match(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_evaluate(args: argparse.Namespace) -> int:
+    data_dir = Path(args.data_dir)
+    postings = load_previous(data_dir)
+    req_path = Path(args.requirements) if args.requirements else data_dir / "requirements.json"
+    records = load_requirements(req_path)
+    labels = load_labels(Path(args.labels))
+    if not labels:
+        print(f"[warn] keine Labels in {args.labels}", file=sys.stderr)
+        return 1
+    versions = sorted({r.prompt_version for r in records.values()})
+    report = run_evaluation(labels, postings, records, load_profile(args.profile))
+    print(format_report(report, title=f"Evaluation: {req_path.name} (Prompt {', '.join(versions)}, {len(labels)} Labels)"))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="jobradar")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -157,6 +174,12 @@ def main(argv: list[str] | None = None) -> int:
     match.add_argument("--profile", default="profile.yaml")
     match.add_argument("--all", action="store_true", help="auch Stellen zeigen, die am harten Filter scheitern")
     match.set_defaults(func=cmd_match)
+    ev = sub.add_parser("evaluate", help="Extraktion und Bewertung gegen data/labels.csv messen")
+    ev.add_argument("--data-dir", default="data")
+    ev.add_argument("--labels", default="data/labels.csv")
+    ev.add_argument("--requirements", default=None, help="andere Ergebnisdatei, z. B. data/requirements_v1.json")
+    ev.add_argument("--profile", default="profile.yaml")
+    ev.set_defaults(func=cmd_evaluate)
     args = parser.parse_args(argv)
     return args.func(args)
 

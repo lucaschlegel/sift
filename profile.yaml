@@ -9,9 +9,9 @@ hard:
   llm_experience_required: false   # Stellen mit LLM-Pflicht raus
   max_years_experience: 3
 soft:
-  prefer_domains: ["bio", "pharma", "medical", "clinical", "statistic", "data scien", "consult", "trainee", "quantitative", "modell"]
+  prefer_domains: ["bio", "pharma", "medical", "clinic", "statistic", "data scien", "trainee", "quantitative", "modell", "actuar"]
   prefer_phd_welcome: true
-  avoid: ["frontend", "sales", "office management", "legal", "recruiting", "video", "UX", "cloud engineer", "software engineer"]
+  avoid: ["frontend", "sales", "office management", "legal", "recruiting", "video", "UX", "cloud engineer", "software engineer", "software developer", "IT architecture", "head of IT"]
 background:
   degree: "M.Sc. Mathematics (TUM), PhD computational genomics (TUM, defence Q1 2027)"
   skills: ["Python", "TensorFlow/Keras", "scikit-learn", "R", "statistics", "mathematical modelling", "Linux/HPC", "Git"]

@@ -14,8 +14,9 @@ from jobradar.sources.base import get, strip_html
 
 
 class LeverSource:
-    def __init__(self, slug: str, company: str | None = None):
+    def __init__(self, slug: str, company: str | None = None, location_hint: str | None = None):
         self.slug = slug
+        self.location_hint = location_hint  # z. B. "office Munich", wenn die Quelle nur "Europe" sagt
         self.company = company or slug.strip("-").capitalize()
         self.name = f"lever:{slug}"
 
@@ -40,6 +41,8 @@ class LeverSource:
         location = ", ".join(locations)
         if workplace:
             location = f"{location} ({workplace})" if location else workplace
+        if self.location_hint:
+            location = f"{location}, {self.location_hint}" if location else self.location_hint
         return Posting(
             source=self.name,
             company=self.company,
