@@ -1,4 +1,4 @@
-"""Datenmodelle des Job-Radars.
+"""Datenmodelle.
 
 Ein Posting ist das, was eine Karriereseite liefert. Die Extraktion (Schritt 2)
 füllt später aus dem Volltext ein Requirements-Objekt.

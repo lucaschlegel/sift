@@ -9,9 +9,9 @@ from typing import Protocol
 
 import requests
 
-from jobradar.models import Posting
+from sift.models import Posting
 
-USER_AGENT = "jobradar/0.1 (personal job search tool; contact via GitHub)"
+USER_AGENT = "sift/0.1 (personal project; contact via GitHub)"
 REQUEST_PAUSE_SECONDS = 1.0
 
 

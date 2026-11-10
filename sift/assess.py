@@ -16,9 +16,9 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from jobradar.extract import DEFAULT_MODEL
-from jobradar.models import Match, Posting, Requirements
-from jobradar.tools import TOOL_DEFINITIONS, run_tool
+from sift.extract import DEFAULT_MODEL
+from sift.models import Match, Posting, Requirements
+from sift.tools import TOOL_DEFINITIONS, run_tool
 
 MAX_TOOL_ROUNDS = 6
 
@@ -46,7 +46,7 @@ VERDICT_ORDER = {"apply": 0, "maybe": 1, "applied": 2, "skip": 3}
 SYSTEM_PROMPT = """You are helping one specific candidate decide whether to apply to a job posting.
 You get the candidate profile, the posting, the requirements extracted earlier and the result of simple rule-based filters.
 You may call tools: check_posting_live to see whether the posting is still online, lookup_watchlist to read the candidate's own notes about the company (previous applications, rejections, impressions). Use lookup_watchlist for every posting; use check_posting_live when the posting is older than a few months or the rules say it fits.
-Judge the actual work: a "Software Developer / Consultant" role is software engineering even if it says consultant; the candidate wants data analysis, statistics, modelling or quantitative consulting, not pure software engineering.
+Judge the actual work against the preferences in the profile (prefer_domains, avoid, background): a "Software Developer / Consultant" role is software engineering even if it says consultant.
 Posting dates from the feed are often the date the ad was first created and can be years old for evergreen postings; do not treat an old date as a reason against applying if the posting is live.
 An earlier application to the same company for a different role is not a reason against applying to this one. Only an application to this same role counts as a duplicate.
 Be blunt and concrete. Then call record_assessment exactly once with your final judgement.

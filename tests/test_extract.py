@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
-from jobradar.extract import (
+from sift.extract import (
     AnthropicExtractor,
     TOOL_NAME,
     build_tool,
@@ -12,8 +12,8 @@ from jobradar.extract import (
     parse_tool_response,
     save_requirements,
 )
-from jobradar.models import Requirements
-from jobradar.sources.lever import LeverSource
+from sift.models import Requirements
+from sift.sources.lever import LeverSource
 
 FIX = Path(__file__).parent / "fixtures"
 

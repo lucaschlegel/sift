@@ -1,12 +1,12 @@
 """Kommandozeile.
 
-  python -m jobradar fetch [--all]          Schritt 1: Stellen holen, speichern, neue zeigen
-  python -m jobradar extract [--limit N]    Schritt 2: Anforderungen per Modell extrahieren
-  python -m jobradar match [--all]          Schritt 3: gegen profile.yaml bewerten
-  python -m jobradar evaluate               Schritt 4: gegen data/labels.csv messen
-  python -m jobradar assess [--top N]       Schritt 5: Modell begründet die Passung, mit Werkzeugen
-  python -m jobradar run                    alles hintereinander (für den Cronjob)
-  python -m jobradar serve                  Schritt 6: FastAPI unter http://127.0.0.1:8000
+  python -m sift fetch [--all]          Schritt 1: Stellen holen, speichern, neue zeigen
+  python -m sift extract [--limit N]    Schritt 2: Anforderungen per Modell extrahieren
+  python -m sift match [--all]          Schritt 3: gegen profile.yaml bewerten
+  python -m sift evaluate               Schritt 4: gegen data/labels.csv messen
+  python -m sift assess [--top N]       Schritt 5: Modell begründet die Passung, mit Werkzeugen
+  python -m sift run                    alles hintereinander (für den Cronjob)
+  python -m sift serve                  Schritt 6: FastAPI unter http://127.0.0.1:8000
 """
 
 from __future__ import annotations
@@ -17,12 +17,12 @@ from pathlib import Path
 
 import yaml
 
-from jobradar.extract import AnthropicExtractor, extract_missing, load_requirements, save_requirements
-from jobradar.assess import VERDICT_ORDER, AnthropicAssessor, load_assessments, save_assessments
-from jobradar.evaluate import format_report, load_labels, run as run_evaluation
-from jobradar.match import evaluate_all, load_profile
-from jobradar.sources import build_sources
-from jobradar.store import diff_new, load_previous, save_run
+from sift.extract import AnthropicExtractor, extract_missing, load_requirements, save_requirements
+from sift.assess import VERDICT_ORDER, AnthropicAssessor, load_assessments, save_assessments
+from sift.evaluate import format_report, load_labels, run as run_evaluation
+from sift.match import evaluate_all, load_profile
+from sift.sources import build_sources
+from sift.store import diff_new, load_previous, save_run
 
 
 def print_table(postings, title: str) -> None:
@@ -101,7 +101,7 @@ def cmd_extract(args: argparse.Namespace) -> int:
     data_dir = Path(args.data_dir)
     postings = load_previous(data_dir)
     if not postings:
-        print("[warn] keine gespeicherten Stellen, erst `python -m jobradar fetch` laufen lassen", file=sys.stderr)
+        print("[warn] keine gespeicherten Stellen, erst `python -m sift fetch` laufen lassen", file=sys.stderr)
         return 1
     if args.company:
         postings = [p for p in postings if args.company.lower() in p.company.lower()]
@@ -218,12 +218,12 @@ def cmd_run(args: argparse.Namespace) -> int:
 def cmd_serve(args: argparse.Namespace) -> int:
     import uvicorn
 
-    uvicorn.run("jobradar.api:app", host=args.host, port=args.port, reload=False)
+    uvicorn.run("sift.api:app", host=args.host, port=args.port, reload=False)
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="jobradar")
+    parser = argparse.ArgumentParser(prog="sift")
     sub = parser.add_subparsers(dest="command", required=True)
     fetch = sub.add_parser("fetch", help="Stellen holen und neue anzeigen")
     fetch.add_argument("--sources", default="sources.yaml")
@@ -235,7 +235,7 @@ def main(argv: list[str] | None = None) -> int:
     extract.add_argument("--limit", type=int, default=None, help="höchstens N neue Anzeigen verarbeiten")
     extract.add_argument("--company", default=None, help="nur Anzeigen dieser Firma")
     extract.add_argument("--force", action="store_true", help="auch schon extrahierte Anzeigen neu verarbeiten")
-    extract.add_argument("--model", default=None, help="Modellname, Standard aus JOBRADAR_MODEL oder claude-haiku-5-5")
+    extract.add_argument("--model", default=None, help="Modellname, Standard aus SIFT_MODEL oder claude-haiku-5-5")
     extract.set_defaults(func=cmd_extract)
     match = sub.add_parser("match", help="Stellen gegen profile.yaml bewerten")
     match.add_argument("--data-dir", default="data")

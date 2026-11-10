@@ -21,9 +21,9 @@ from typing import Protocol
 
 from pydantic import BaseModel
 
-from jobradar.models import Posting, Requirements
+from sift.models import Posting, Requirements
 
-DEFAULT_MODEL = os.environ.get("JOBRADAR_MODEL", "claude-haiku-5-5")
+DEFAULT_MODEL = os.environ.get("SIFT_MODEL", "claude-haiku-5-5")
 MAX_CHARS = 12000  # längere Anzeigen abschneiden, der Rest ist fast immer Firmenprosa
 
 PROMPT_VERSION = "v3"  # bei jeder Änderung am Prompt hochzählen, damit Schritt 4 Varianten vergleichen kann

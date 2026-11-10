@@ -10,8 +10,8 @@ from __future__ import annotations
 import xml.etree.ElementTree as ET
 from datetime import date, datetime
 
-from jobradar.models import Posting
-from jobradar.sources.base import get, strip_html
+from sift.models import Posting
+from sift.sources.base import get, strip_html
 
 
 class PersonioSource:

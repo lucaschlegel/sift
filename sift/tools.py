@@ -13,7 +13,7 @@ from pathlib import Path
 import requests
 import yaml
 
-from jobradar.sources.base import USER_AGENT
+from sift.sources.base import USER_AGENT
 
 CLOSED_MARKERS = (
     "position has been filled",

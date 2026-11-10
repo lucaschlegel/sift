@@ -1,5 +1,5 @@
-from jobradar.match import evaluate, load_profile
-from jobradar.models import Posting, Requirements
+from sift.match import evaluate, load_profile
+from sift.models import Posting, Requirements
 
 
 def posting(title="Data Scientist", location="Munich", employment="permanent / full-time", company="Staburo"):
@@ -15,7 +15,7 @@ def req(**kw):
     return Requirements(**base)
 
 
-PROFILE = load_profile("profile.yaml")
+PROFILE = load_profile("profile.example.yaml")
 
 
 def test_good_fit_passes_and_scores_high():
@@ -44,7 +44,7 @@ def test_intern_fails():
 
 
 def test_bad_location_fails_but_unclear_passes():
-    bad = evaluate(posting(location="Budapest"), req(), PROFILE)
+    bad = evaluate(posting(location="USA"), req(), PROFILE)
     assert not bad.hard_filter_passed
     unclear = evaluate(posting(location="Europe (hybrid)"), req(remote_policy="unclear"), PROFILE)
     assert unclear.hard_filter_passed

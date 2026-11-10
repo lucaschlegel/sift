@@ -1,0 +1,4 @@
+# Example notes the model can look up in the assess step (tool lookup_watchlist).
+# Copy to watchlist.yaml and keep your own notes there; watchlist.yaml is git-ignored.
+Example Analytics GmbH: "Applied 01.03.2026 as Data Scientist, no reply yet. Pleasant application portal."
+Acme Software: "Applied 15.02.2026 as Software Developer, rejected 01.03. Pure software engineering, not my direction."

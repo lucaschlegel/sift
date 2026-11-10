@@ -1,0 +1,21 @@
+# Example profile for the matching step. Copy to profile.yaml and edit; profile.yaml is git-ignored.
+# hard: filters a posting out when violated. soft: moves the score. background: shown to the model in the assess step.
+hard:
+  contract: permanent
+  hours: full_time
+  locations_ok: ["Munich", "München", "Germany", "Deutschland"]
+  locations_bad: ["USA", "United States"]
+  exclude_employer_types: ["university", "research institute"]
+  seniority_ok: ["junior", "mid", "unclear"]
+  llm_experience_required: false   # drop postings that require hands-on LLM experience
+  max_years_experience: 3
+soft:
+  prefer_domains: ["statistic", "data scien", "quantitative", "modell"]
+  prefer_phd_welcome: true
+  avoid: ["frontend", "sales", "legal", "recruiting", "software engineer"]
+background:
+  degree: "M.Sc. in a quantitative field"
+  skills: ["Python", "statistics", "machine learning", "Git"]
+  not_yet: ["cloud platforms", "SQL"]
+  languages: ["German native", "English fluent"]
+  available: "by arrangement"

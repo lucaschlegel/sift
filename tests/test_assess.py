@@ -1,10 +1,10 @@
 import json
 from types import SimpleNamespace
 
-from jobradar.assess import AnthropicAssessor, Assessment, RECORD_TOOL, build_user_message
-from jobradar.match import Match, load_profile
-from jobradar.models import Posting, Requirements
-from jobradar.tools import check_posting_live, lookup_watchlist, run_tool
+from sift.assess import AnthropicAssessor, Assessment, RECORD_TOOL, build_user_message
+from sift.match import Match, load_profile
+from sift.models import Posting, Requirements
+from sift.tools import check_posting_live, lookup_watchlist, run_tool
 
 
 def posting():
@@ -54,7 +54,7 @@ def test_tool_loop_runs_tools_and_returns_assessment():
     client = ScriptedClient()
     assessor = AnthropicAssessor(model="test", client=client, tool_runner=fake_runner)
     match = Match(posting_key=posting().key, hard_filter_passed=True, score=0.9, reasons=["Ort passt"])
-    rec = assessor.assess(posting(), req(), match, load_profile("profile.yaml"))
+    rec = assessor.assess(posting(), req(), match, load_profile("profile.example.yaml"))
     assert rec.assessment.verdict == "apply"
     assert len(rec.tool_calls) == 2 and rec.tool_calls[0].startswith("lookup_watchlist")
     # zweiter API-Aufruf enthält die Werkzeugergebnisse als tool_result
@@ -71,7 +71,7 @@ def test_record_tool_schema_has_verdict_enum():
 
 def test_user_message_contains_everything():
     match = Match(posting_key="x", hard_filter_passed=True, score=0.5, reasons=[])
-    msg = build_user_message(posting(), req(), match, load_profile("profile.yaml"))
+    msg = build_user_message(posting(), req(), match, load_profile("profile.example.yaml"))
     for needle in ("CANDIDATE PROFILE", "Staburo", "EXTRACTED REQUIREMENTS", "RULE-BASED RESULT", "POSTING TEXT"):
         assert needle in msg
 
@@ -86,7 +86,8 @@ def test_check_posting_live_detects_closed_and_redirect():
 
 
 def test_lookup_watchlist_fuzzy():
-    assert lookup_watchlist("QuantCo Deutschland GmbH")["note"]
-    assert lookup_watchlist("TNG Technology Consulting")["note"]
-    assert lookup_watchlist("Unknown Corp")["note"] is None
-    assert run_tool("lookup_watchlist", {"company": "Staburo"})["note"]
+    wl = "watchlist.example.yaml"
+    assert lookup_watchlist("Example Analytics", path=wl)["note"]
+    assert lookup_watchlist("ACME Software Inc.", path=wl)["note"]
+    assert lookup_watchlist("Unknown Corp", path=wl)["note"] is None
+    assert run_tool("lookup_watchlist", {"company": "Nowhere Ltd"})["note"] is None

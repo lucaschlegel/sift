@@ -15,7 +15,7 @@ from pathlib import Path
 
 import yaml
 
-from jobradar.models import Match, Posting, Requirements
+from sift.models import Match, Posting, Requirements
 
 INTERN_RE = re.compile(r"intern|praktik|werkstud|working student|student|thesis|abschlussarbeit", re.I)
 

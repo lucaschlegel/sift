@@ -3,9 +3,9 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from jobradar import api
-from jobradar.extract import ExtractionRecord
-from jobradar.models import Posting, Requirements
+from sift import api
+from sift.extract import ExtractionRecord
+from sift.models import Posting, Requirements
 
 
 def seed(tmp_path: Path):

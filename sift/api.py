@@ -1,11 +1,11 @@
 """Schritt 6: kleiner Lesedienst über die gespeicherten Ergebnisse.
 
-    python -m jobradar serve            # http://127.0.0.1:8000/docs zeigt die Endpunkte
+    python -m sift serve            # http://127.0.0.1:8000/docs zeigt die Endpunkte
     GET /postings                       # letzter Lauf
     GET /matches?passed_only=true       # Regelbewertung
     GET /assessments                    # Einschätzungen des Modells
 
-Der Dienst ruft kein Modell auf, er liest nur `data/`. Rechnen tut der Cronjob (`python -m jobradar run`).
+Der Dienst ruft kein Modell auf, er liest nur `data/`. Rechnen tut der Cronjob (`python -m sift run`).
 """
 
 from __future__ import annotations
@@ -15,15 +15,15 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 
-from jobradar.assess import VERDICT_ORDER, load_assessments
-from jobradar.extract import load_requirements
-from jobradar.match import evaluate_all, load_profile
-from jobradar.store import load_previous
+from sift.assess import VERDICT_ORDER, load_assessments
+from sift.extract import load_requirements
+from sift.match import evaluate_all, load_profile
+from sift.store import load_previous
 
-DATA_DIR = Path(os.environ.get("JOBRADAR_DATA_DIR", "data"))
-PROFILE = os.environ.get("JOBRADAR_PROFILE", "profile.yaml")
+DATA_DIR = Path(os.environ.get("SIFT_DATA_DIR", "data"))
+PROFILE = os.environ.get("SIFT_PROFILE", "profile.yaml")
 
-app = FastAPI(title="jobradar", version="0.1", description="Stellen, extrahierte Anforderungen, Bewertungen.")
+app = FastAPI(title="sift", version="0.1", description="Stellen, extrahierte Anforderungen, Bewertungen.")
 
 
 @app.get("/health")

@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from jobradar.models import Posting
-from jobradar.sources.base import get, strip_html
+from sift.models import Posting
+from sift.sources.base import get, strip_html
 
 
 # Ortsangaben, die keinen Ort nennen. Nur dann wird location_hint angehängt;

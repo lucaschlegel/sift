@@ -16,9 +16,9 @@ import csv
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from jobradar.extract import ExtractionRecord
-from jobradar.match import evaluate
-from jobradar.models import Posting
+from sift.extract import ExtractionRecord
+from sift.match import evaluate
+from sift.models import Posting
 
 LABELS_FILE = Path("data") / "labels.csv"
 FIELDS = ("seniority", "min_years", "llm_required", "phd_mentioned")

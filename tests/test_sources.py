@@ -1,9 +1,9 @@
 import json
 from pathlib import Path
 
-from jobradar.sources.lever import LeverSource
-from jobradar.sources.personio import PersonioSource
-from jobradar.store import diff_new
+from sift.sources.lever import LeverSource
+from sift.sources.personio import PersonioSource
+from sift.store import diff_new
 
 FIX = Path(__file__).parent / "fixtures"
 

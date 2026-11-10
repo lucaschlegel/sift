@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from jobradar.evaluate import Label, compare, format_report, load_labels, run
-from jobradar.extract import ExtractionRecord
-from jobradar.match import load_profile
-from jobradar.models import Posting, Requirements
+from sift.evaluate import Label, compare, format_report, load_labels, run
+from sift.extract import ExtractionRecord
+from sift.match import load_profile
+from sift.models import Posting, Requirements
 
 
 def rec(**kw):
@@ -27,7 +27,7 @@ def test_run_reports_accuracy_and_fit(tmp_path):
                       location="Munich", url="https://e.org", employment_type="permanent / full-time")
     records = {posting.key: rec(seniority="mid", phd_mentioned=True)}
     labels = [Label(posting.key, seniority="mid", min_years=0, llm_required=False, phd_mentioned=True, fit=True)]
-    report = run(labels, [posting], records, load_profile("profile.yaml"))
+    report = run(labels, [posting], records, load_profile("profile.example.yaml"))
     assert report.fields["seniority"].accuracy == 1.0
     assert report.fields["min_years"].accuracy == 1.0
     assert report.fit_yes_passed == 1 and report.fit_yes_total == 1

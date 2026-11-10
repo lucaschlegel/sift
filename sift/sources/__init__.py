@@ -1,7 +1,7 @@
-"""Quellen des Job-Radars. Neue Quelle = neue Klasse mit fetch() -> list[Posting]."""
+"""Quellen. Neue Quelle = neue Klasse mit fetch() -> list[Posting]."""
 
-from jobradar.sources.lever import LeverSource
-from jobradar.sources.personio import PersonioSource
+from sift.sources.lever import LeverSource
+from sift.sources.personio import PersonioSource
 
 __all__ = ["LeverSource", "PersonioSource", "build_sources"]
 

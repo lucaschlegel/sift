@@ -1,4 +1,4 @@
-# Quellen des Job-Radars. Slug = Firmenkürzel in der Karriere-URL.
+# Quellen. Slug = Firmenkürzel in der Karriere-URL.
 # Neue Firma = neue Zeile. Portale ohne Feed (SuccessFactors, Workday, Avature) kommen in Schritt 1b.
 sources:
   lever:

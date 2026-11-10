@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from jobradar.models import Posting
+from sift.models import Posting
 
 DATA_DIR = Path("data")
 
