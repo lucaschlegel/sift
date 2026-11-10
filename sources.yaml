@@ -1,0 +1,15 @@
+# Quellen des Job-Radars. Slug = Firmenkürzel in der Karriere-URL.
+# Neue Firma = neue Zeile. Portale ohne Feed (SuccessFactors, Workday, Avature) kommen in Schritt 1b.
+sources:
+  lever:
+    - slug: quantco-
+      company: QuantCo
+  personio:
+    - slug: staburo
+      company: Staburo
+    - slug: coriolis
+      company: Coriolis Pharma
+    - slug: tngtech
+      company: TNG Technology Consulting
+    - slug: appliedai
+      company: appliedAI

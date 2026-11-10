@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workzag-jobs>
+  <position>
+    <id>765770</id>
+    <subcompany></subcompany>
+    <office>Munich</office>
+    <department>Biostatistics &amp; Data Science</department>
+    <recruitingCategory>Data Science</recruitingCategory>
+    <name>(Senior) Data Scientist with focus Clinical Statistics (f/m/d - part/full-time)</name>
+    <jobDescriptions>
+      <jobDescription>
+        <name>Your responsibilities will include</name>
+        <value><![CDATA[<ul><li>Analysis of project data (e.g. trial data) and data processing</li><li>Customer consulting and direct point of contact</li></ul>]]></value>
+      </jobDescription>
+      <jobDescription>
+        <name>Your profile</name>
+        <value><![CDATA[<ul><li>Master´s degree in statistics, mathematics, or comparable studies or PhD</li><li>Very good IT skills, especially with statistical analysis tools (SAS, R)</li></ul>]]></value>
+      </jobDescription>
+    </jobDescriptions>
+    <employmentType>permanent</employmentType>
+    <seniority>experienced</seniority>
+    <schedule>full-time</schedule>
+    <yearsOfExperience>2-5</yearsOfExperience>
+    <keywords>statistics, clinical</keywords>
+    <occupation>data_science</occupation>
+    <occupationCategory>it_software</occupationCategory>
+    <createdAt>2024-09-10T08:00:00+0000</createdAt>
+  </position>
+</workzag-jobs>

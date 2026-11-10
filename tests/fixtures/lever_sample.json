@@ -1,0 +1,26 @@
+[
+  {
+    "id": "3e18574e-ab5a-46a2-8714-a0221fb937e7",
+    "text": "Data Scientist",
+    "categories": {"commitment": "Full-Time Or Part-Time", "location": "Europe", "team": "Data Science", "allLocations": ["Europe"]},
+    "createdAt": 1750000000000,
+    "hostedUrl": "https://jobs.lever.co/quantco-/3e18574e-ab5a-46a2-8714-a0221fb937e7",
+    "description": "<div>Data Scientists at QuantCo will learn what it takes to create impact from data.</div>",
+    "descriptionPlain": "Data Scientists at QuantCo will learn what it takes to create impact from data.",
+    "lists": [
+      {"text": "We are looking for team players who have excellent quantitative abilities and:", "content": "<li>A degree in economics, statistics, mathematics, computer science, engineering, physics, or similar fields at a leading university</li><li>In-depth understanding of mathematical and statistical concepts behind most common machine learning techniques and an interest in causal inference</li>"},
+      {"text": "Bonus if skilled in any of the following tools and/or languages:", "content": "<li>SQL</li><li>Tensorflow</li><li>Git</li>"}
+    ],
+    "additional": "<p>We offer a generous compensation package.</p>",
+    "additionalPlain": "We offer a generous compensation package."
+  },
+  {
+    "id": "fd1ea712-8e5f-4db1-b9ec-36d0e08ac3ae",
+    "text": "AI Applied Scientist",
+    "categories": {"commitment": "Full-Time Or Part-Time", "location": "Europe", "team": "Data Science"},
+    "createdAt": 1752000000000,
+    "hostedUrl": "https://jobs.lever.co/quantco-/fd1ea712-8e5f-4db1-b9ec-36d0e08ac3ae",
+    "descriptionPlain": "Applied scientists identify high-impact problems.",
+    "lists": [{"text": "Ideal candidates:", "content": "<li>Familiarity with frontier lab APIs (Gemini, OpenAI, Anthropic)</li>"}]
+  }
+]

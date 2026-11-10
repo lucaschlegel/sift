@@ -1,0 +1,19 @@
+# Mein Profil für die Bewertung in Schritt 3. Harte Kriterien filtern, weiche gewichten.
+hard:
+  contract: permanent          # unbefristet
+  hours: full_time
+  locations_ok: ["München", "Munich", "Garching", "Martinsried", "Planegg", "remote Germany", "Stuttgart (3 office days)"]
+  exclude_employer_types: ["university", "research institute", "Max Planck", "Helmholtz", "Fraunhofer"]
+  seniority_ok: ["junior", "mid", "unclear"]
+  llm_experience_required: false   # Stellen mit LLM-Pflicht raus
+  max_years_experience: 3
+soft:
+  prefer_domains: ["bio", "pharma", "medical", "clinical", "statistics", "consulting", "trainee"]
+  prefer_phd_welcome: true
+  avoid: ["pure software engineering", "frontend", "sales"]
+background:
+  degree: "M.Sc. Mathematics (TUM), PhD computational genomics (TUM, defence Q1 2027)"
+  skills: ["Python", "TensorFlow/Keras", "scikit-learn", "R", "statistics", "mathematical modelling", "Linux/HPC", "Git"]
+  not_yet: ["LLM applications", "cloud platforms", "SAS", "SQL", "clinical trials"]
+  languages: ["German native", "English fluent"]
+  available: "early 2027"
